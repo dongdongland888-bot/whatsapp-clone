@@ -1,0 +1,229 @@
+/* Dark Theme Overrides */
+/* This file provides additional dark mode specific styles */
+
+[data-theme="dark"] {
+  /* Override for images in dark mode */
+  img {
+    /* Slightly reduce brightness for better dark mode viewing */
+    filter: brightness(0.95);
+  }
+  
+  /* Adjust SVG icons that don't use currentColor */
+  svg:not([fill="none"]):not([fill="currentColor"]) {
+    filter: brightness(0.9);
+  }
+  
+  /* Chat background pattern */
+  .messages-area {
+    background-color: var(--bg-chat);
+    background-image: var(--bg-chat-pattern);
+  }
+  
+  /* Auth form card */
+  .auth-card {
+    background-color: var(--bg-secondary);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Search inputs */
+  .search-input-wrapper {
+    background-color: var(--bg-tertiary);
+    
+    input {
+      background-color: transparent;
+      color: var(--text-primary);
+      
+      &::placeholder {
+        color: var(--text-tertiary);
+      }
+    }
+  }
+  
+  /* Message bubbles in dark mode */
+  .message-bubble {
+    &.sent {
+      background-color: var(--msg-sent-bg);
+      color: var(--msg-sent-text);
+    }
+    
+    &.received {
+      background-color: var(--msg-received-bg);
+      color: var(--msg-received-text);
+    }
+  }
+  
+  /* Emoji picker */
+  .emoji-picker {
+    background-color: var(--emoji-bg);
+    
+    .emoji-category-bar {
+      background-color: var(--emoji-category-bg);
+    }
+  }
+  
+  /* Voice recorder */
+  .voice-recorder {
+    .waveform-container {
+      background-color: var(--bg-tertiary);
+    }
+  }
+  
+  /* Video call overlay */
+  .video-call-overlay {
+    background-color: var(--bg-primary);
+  }
+  
+  /* Context menu */
+  .context-menu {
+    background-color: var(--bg-dropdown);
+    border: 1px solid var(--border-light);
+  }
+  
+  /* Tooltip */
+  .tooltip {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+  
+  /* Modal dialogs */
+  .modal,
+  .edit-modal,
+  .delete-modal {
+    .modal-content,
+    .edit-container,
+    .delete-container {
+      background-color: var(--bg-secondary);
+    }
+  }
+  
+  /* Profile page */
+  .profile-header {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  }
+  
+  /* Settings sections */
+  .settings-section {
+    background-color: var(--bg-secondary);
+  }
+  
+  /* Lists and items */
+  .chat-item,
+  .contact-item,
+  .group-item,
+  .call-item {
+    &:hover {
+      background-color: var(--bg-hover);
+    }
+    
+    &.active {
+      background-color: var(--bg-active);
+    }
+  }
+  
+  /* Dividers */
+  .divider,
+  .date-divider span {
+    background-color: var(--msg-system-bg);
+    color: var(--text-secondary);
+  }
+  
+  /* Media preview */
+  .media-preview-overlay {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+  
+  /* Input area */
+  .message-input-area {
+    background-color: var(--bg-secondary);
+    
+    .input-wrapper {
+      background-color: var(--bg-tertiary);
+      
+      textarea {
+        color: var(--text-primary);
+        
+        &::placeholder {
+          color: var(--text-tertiary);
+        }
+      }
+    }
+  }
+  
+  /* Header */
+  .chat-header,
+  .sidebar-header {
+    background-color: var(--bg-secondary);
+    border-color: var(--border-light);
+  }
+  
+  /* Tabs */
+  .tab-bar {
+    .tab-item {
+      color: var(--text-secondary);
+      
+      &.active {
+        color: var(--primary);
+      }
+    }
+  }
+  
+  /* Chips/Tags */
+  .chip {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    
+    &.active {
+      background-color: var(--primary);
+      color: var(--text-light);
+    }
+  }
+  
+  /* Status indicators */
+  .status-text {
+    &.online {
+      color: var(--status-online);
+    }
+    
+    &.typing {
+      color: var(--status-typing);
+    }
+  }
+  
+  /* Code blocks */
+  code,
+  pre {
+    background-color: var(--bg-tertiary);
+    border-color: var(--border-light);
+  }
+  
+  /* Links in messages */
+  .message-content a {
+    color: var(--text-link);
+  }
+  
+  /* Timestamp */
+  .timestamp,
+  .message-time {
+    color: var(--text-tertiary);
+  }
+}
+
+/* Light Theme Specific (optional explicit overrides) */
+[data-theme="light"] {
+  /* Any light-mode specific overrides */
+}
+
+/* System preference fallback when no data-theme is set */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg-primary: #111b21;
+    --bg-secondary: #202c33;
+    --bg-tertiary: #2a3942;
+    --bg-chat: #0b141a;
+    --text-primary: #e9edef;
+    --text-secondary: #8696a0;
+    --text-tertiary: #667781;
+    --msg-sent-bg: #005c4b;
+    --msg-received-bg: #202c33;
+  }
+}

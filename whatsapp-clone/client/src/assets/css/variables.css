@@ -1,0 +1,205 @@
+/* WhatsApp Clone - CSS Variables */
+/* Global design tokens for consistent theming */
+
+:root {
+  /* Brand Colors */
+  --wa-green: #25D366;
+  --wa-green-dark: #128C7E;
+  --wa-green-light: #DCF8C6;
+  --wa-teal: #075E54;
+  --wa-teal-dark: #054640;
+  
+  /* Blue ticks */
+  --tick-read: #53bdeb;
+  --tick-sent: #8696a0;
+  --tick-delivered: #8696a0;
+  
+  /* Status colors */
+  --status-online: #25D366;
+  --status-error: #ea0038;
+  --status-warning: #f59f00;
+  
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.15);
+  
+  /* Typography */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  
+  /* Line heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.4;
+  --line-height-relaxed: 1.6;
+  
+  /* Transitions */
+  --transition-fast: 0.1s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
+  
+  /* Z-index layers */
+  --z-dropdown: 100;
+  --z-modal: 200;
+  --z-overlay: 300;
+  --z-toast: 400;
+  
+  /* Layout */
+  --sidebar-width: 400px;
+  --sidebar-width-collapsed: 72px;
+  --header-height: 60px;
+  --input-height: 62px;
+}
+
+/* Light Theme (Default) */
+:root,
+[data-theme="light"] {
+  /* Backgrounds */
+  --bg-app: #f0f2f5;
+  --bg-panel: #ffffff;
+  --bg-sidebar: #ffffff;
+  --bg-chat: #efeae2;
+  --bg-chat-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d1d7db' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --bg-input: #f0f2f5;
+  --bg-hover: rgba(0, 0, 0, 0.05);
+  --bg-active: rgba(0, 168, 132, 0.1);
+  
+  /* Message bubbles */
+  --bg-message-out: #d9fdd3;
+  --bg-message-in: #ffffff;
+  
+  /* Borders */
+  --border-color: #e9edef;
+  --border-color-light: #f0f2f5;
+  
+  /* Text */
+  --text-primary: #111b21;
+  --text-secondary: #54656f;
+  --text-tertiary: #8696a0;
+  --text-inverse: #ffffff;
+  --text-link: #027eb5;
+  
+  /* Interactive */
+  --primary: #00a884;
+  --primary-hover: #008f72;
+  --primary-active: #007561;
+  --secondary: #8696a0;
+  --danger: #ea0038;
+  --danger-hover: #d90033;
+  
+  /* Icons */
+  --icon-color: #54656f;
+  --icon-color-light: #8696a0;
+  
+  /* Dividers */
+  --divider: #e9edef;
+  
+  /* Scrollbar */
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-app: #0b141a;
+  --bg-panel: #111b21;
+  --bg-sidebar: #111b21;
+  --bg-chat: #0b141a;
+  --bg-chat-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231e2d36' fill-opacity='0.6'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --bg-input: #2a3942;
+  --bg-hover: rgba(255, 255, 255, 0.05);
+  --bg-active: rgba(0, 168, 132, 0.15);
+  
+  /* Message bubbles */
+  --bg-message-out: #005c4b;
+  --bg-message-in: #202c33;
+  
+  /* Borders */
+  --border-color: #233138;
+  --border-color-light: #2a3942;
+  
+  /* Text */
+  --text-primary: #e9edef;
+  --text-secondary: #aebac1;
+  --text-tertiary: #8696a0;
+  --text-inverse: #111b21;
+  --text-link: #53bdeb;
+  
+  /* Interactive */
+  --primary: #00a884;
+  --primary-hover: #06cf9c;
+  --primary-active: #00c896;
+  --secondary: #8696a0;
+  --danger: #f15c6d;
+  --danger-hover: #ea0038;
+  
+  /* Icons */
+  --icon-color: #aebac1;
+  --icon-color-light: #8696a0;
+  
+  /* Dividers */
+  --divider: #233138;
+  
+  /* Scrollbar */
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+}
+
+/* System theme preference */
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+    /* Copy dark theme values */
+    --bg-app: #0b141a;
+    --bg-panel: #111b21;
+    --bg-sidebar: #111b21;
+    --bg-chat: #0b141a;
+    --bg-chat-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231e2d36' fill-opacity='0.6'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    --bg-input: #2a3942;
+    --bg-hover: rgba(255, 255, 255, 0.05);
+    --bg-active: rgba(0, 168, 132, 0.15);
+    --bg-message-out: #005c4b;
+    --bg-message-in: #202c33;
+    --border-color: #233138;
+    --border-color-light: #2a3942;
+    --text-primary: #e9edef;
+    --text-secondary: #aebac1;
+    --text-tertiary: #8696a0;
+    --text-inverse: #111b21;
+    --text-link: #53bdeb;
+    --primary: #00a884;
+    --primary-hover: #06cf9c;
+    --primary-active: #00c896;
+    --secondary: #8696a0;
+    --danger: #f15c6d;
+    --danger-hover: #ea0038;
+    --icon-color: #aebac1;
+    --icon-color-light: #8696a0;
+    --divider: #233138;
+    --scrollbar-track: transparent;
+    --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+  }
+}

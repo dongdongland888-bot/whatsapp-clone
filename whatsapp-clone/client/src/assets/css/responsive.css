@@ -1,0 +1,346 @@
+/* WhatsApp Clone - Responsive Styles */
+/* =================================== */
+
+/* Mobile First Breakpoints */
+/* xs: 0-479px (small phones) */
+/* sm: 480-639px (phones) */
+/* md: 640-767px (large phones/small tablets) */
+/* lg: 768-1023px (tablets) */
+/* xl: 1024-1279px (small desktops) */
+/* 2xl: 1280px+ (large desktops) */
+
+/* Base Mobile Styles */
+@media (max-width: 479px) {
+  :root {
+    --font-size-base: 14px;
+    --avatar-md: 36px;
+    --avatar-lg: 48px;
+    --header-height: 56px;
+  }
+  
+  .sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+  
+  .chat-container {
+    .chat-header {
+      padding: 8px 12px;
+      
+      .contact-info {
+        .avatar {
+          width: 36px;
+          height: 36px;
+          margin-right: 10px;
+        }
+        
+        .info h3 {
+          font-size: 15px;
+        }
+      }
+      
+      .header-actions {
+        gap: 0;
+        
+        .btn-icon {
+          width: 36px;
+          height: 36px;
+          padding: 6px;
+        }
+      }
+    }
+    
+    .messages-area {
+      padding: 12px 8px;
+    }
+    
+    .message-input-area {
+      padding: 8px 10px;
+      
+      .input-row {
+        gap: 6px;
+        
+        .btn-send {
+          width: 40px;
+          height: 40px;
+        }
+      }
+    }
+  }
+  
+  /* Emoji picker smaller on mobile */
+  .emoji-picker {
+    width: 280px !important;
+    max-height: 320px !important;
+  }
+}
+
+/* Small phones - Portrait */
+@media (max-width: 639px) {
+  /* Full screen modals */
+  .edit-modal .edit-container,
+  .delete-modal .delete-container {
+    width: 95%;
+    max-width: none;
+    margin: 10px;
+  }
+  
+  /* Sidebar takes full width */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: var(--z-sticky);
+  }
+  
+  /* Hide desktop-only elements */
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  /* Stack video call controls */
+  .video-call-overlay .call-controls {
+    padding: 12px;
+    gap: 12px;
+    
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+    }
+  }
+  
+  /* Message bubbles */
+  .message-bubble {
+    max-width: 85%;
+    
+    .bubble-content {
+      padding: 8px 12px;
+    }
+  }
+}
+
+/* Tablets - Portrait and small landscape */
+@media (min-width: 640px) and (max-width: 1023px) {
+  :root {
+    --sidebar-min-width: 280px;
+    --sidebar-max-width: 350px;
+  }
+  
+  .app-container {
+    .sidebar {
+      width: 40%;
+      min-width: var(--sidebar-min-width);
+      max-width: var(--sidebar-max-width);
+    }
+    
+    .main-content {
+      flex: 1;
+    }
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  :root {
+    --sidebar-width: 30%;
+    --sidebar-min-width: 300px;
+    --sidebar-max-width: 400px;
+  }
+  
+  .app-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    
+    .sidebar {
+      width: var(--sidebar-width);
+    }
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1280px) {
+  :root {
+    --sidebar-max-width: 450px;
+  }
+  
+  .app-container {
+    border-left: 1px solid var(--border-light);
+    border-right: 1px solid var(--border-light);
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .btn-icon {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Disable hover effects that don't work on touch */
+  .chat-item:hover,
+  .contact-item:hover,
+  .group-item:hover,
+  .call-item:hover {
+    background-color: transparent;
+  }
+  
+  .chat-item:active,
+  .contact-item:active,
+  .group-item:active,
+  .call-item:active {
+    background-color: var(--bg-hover);
+  }
+  
+  /* Remove hover underlines */
+  a:hover {
+    text-decoration: none;
+  }
+  
+  /* Prevent text selection on interactive elements */
+  .btn,
+  .btn-icon,
+  .nav-item,
+  .menu-item,
+  .chip {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Landscape Mode - Small devices */
+@media (max-height: 480px) and (orientation: landscape) {
+  .chat-container {
+    .chat-header {
+      padding: 6px 12px;
+      
+      .avatar {
+        width: 32px;
+        height: 32px;
+      }
+    }
+    
+    .messages-area {
+      padding: 8px;
+    }
+    
+    .message-input-area {
+      padding: 6px 10px;
+    }
+  }
+  
+  .video-call-overlay {
+    .call-info {
+      top: 10px;
+    }
+    
+    .call-controls {
+      bottom: 10px;
+    }
+  }
+}
+
+/* Safe Area Insets for notched devices (iPhone X+, etc.) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .message-input-area {
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+  
+  .sidebar {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .video-call-overlay .call-controls {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Dark mode specific responsive adjustments */
+[data-theme="dark"] {
+  @media (max-width: 767px) {
+    .sidebar-overlay {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+  }
+}
+
+/* Print Styles */
+@media print {
+  .sidebar,
+  .message-input-area,
+  .header-actions,
+  .video-call-overlay,
+  .toast-container {
+    display: none !important;
+  }
+  
+  .main-content {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  
+  .messages-area {
+    background: white !important;
+    background-image: none !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  
+  .message-bubble {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .spinner-icon {
+    animation: none !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --border-light: #000;
+    --text-secondary: #333;
+    --text-tertiary: #555;
+  }
+  
+  [data-theme="dark"] {
+    --border-light: #fff;
+    --text-secondary: #ccc;
+    --text-tertiary: #aaa;
+  }
+  
+  .btn-primary,
+  .btn-send {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Focus Visible for Keyboard Navigation */
+@media (hover: hover) {
+  .btn:focus-visible,
+  .btn-icon:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}

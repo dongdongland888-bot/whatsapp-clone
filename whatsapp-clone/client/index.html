@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="WhatsApp Clone - A messaging app built with Vue 3">
+  <meta name="theme-color" content="#00a884" id="theme-color-meta">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  
+  <!-- Preconnect to API -->
+  <link rel="preconnect" href="http://localhost:5000">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  
+  <!-- Prevent flash of unstyled content -->
+  <script>
+    // Initialize theme immediately to prevent FOUC
+    (function() {
+      const theme = localStorage.getItem('whatsapp-clone-theme') || 'system';
+      const resolved = theme === 'system' 
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : theme;
+      document.documentElement.setAttribute('data-theme', resolved);
+      
+      // Update theme-color meta tag
+      const themeColorMeta = document.getElementById('theme-color-meta');
+      if (themeColorMeta) {
+        themeColorMeta.setAttribute('content', resolved === 'dark' ? '#111b21' : '#00a884');
+      }
+    })();
+  </script>
+  
+  <title>WhatsApp Clone</title>
+  
+  <style>
+    /* Critical CSS for initial paint */
+    html:not([data-theme]) {
+      visibility: hidden;
+    }
+    html[data-theme] {
+      visibility: visible;
+    }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    [data-theme="light"] body {
+      background-color: #f0f2f5;
+    }
+    [data-theme="dark"] body {
+      background-color: #111b21;
+    }
+    /* Loading spinner */
+    .app-loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .app-loading .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e9edef;
+      border-top-color: #00a884;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Loading state before Vue mounts -->
+    <div class="app-loading">
+      <div class="spinner"></div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
