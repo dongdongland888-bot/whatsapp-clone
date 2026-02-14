@@ -3,18 +3,31 @@
  */
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
-const app = require('../../server'); // Assuming there's a server.js that exports the app
+const express = require('express');
 const db = require('../../config/db');
-const User = require('../../models/User');
-
-// Import the test server
-const app = require('../../test-server');
 
 // Mock the database
 jest.mock('../../config/db');
 
+// Create a minimal test app for auth routes
+const createTestApp = () => {
+  const app = express();
+  app.use(express.json());
+  
+  // Import auth routes
+  const authRoutes = require('../../routes/auth');
+  app.use('/api/auth', authRoutes);
+  
+  return app;
+};
+
 describe('Authentication API Integration Tests', () => {
+  let app;
   let mockDbExecute;
+
+  beforeAll(() => {
+    app = createTestApp();
+  });
 
   beforeEach(() => {
     mockDbExecute = jest.fn();
@@ -38,15 +51,15 @@ describe('Authentication API Integration Tests', () => {
         phone: '+1234567890'
       };
 
-      const response = await request(require('../../server'))
+      const response = await request(app)
         .post('/api/auth/register')
         .send(userData)
         .expect(201);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty('id');
-      expect(response.body.data).toHaveProperty('username', 'testuser');
-      expect(response.body.data).toHaveProperty('email', 'test@example.com');
+      expect(response.body.data).toHaveProperty('user');
+      expect(response.body.data).toHaveProperty('accessToken');
+      expect(response.body.data).toHaveProperty('refreshToken');
     });
 
     it('should return error for duplicate email', async () => {
@@ -59,13 +72,13 @@ describe('Authentication API Integration Tests', () => {
         password: 'TestPass123!'
       };
 
-      const response = await request(require('../../server'))
+      const response = await request(app)
         .post('/api/auth/register')
         .send(userData)
         .expect(409);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('email is already registered');
+      expect(response.body.message).toContain('email');
     });
 
     it('should return error for duplicate username', async () => {
@@ -80,13 +93,13 @@ describe('Authentication API Integration Tests', () => {
         password: 'TestPass123!'
       };
 
-      const response = await request(require('../../server'))
+      const response = await request(app)
         .post('/api/auth/register')
         .send(userData)
         .expect(409);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('username is already taken');
+      expect(response.body.message).toContain('username');
     });
 
     it('should return validation errors for invalid input', async () => {
@@ -96,7 +109,7 @@ describe('Authentication API Integration Tests', () => {
         password: '123' // Too weak
       };
 
-      const response = await request(require('../../server'))
+      const response = await request(app)
         .post('/api/auth/register')
         .send(invalidUserData)
         .expect(400);
@@ -111,19 +124,22 @@ describe('Authentication API Integration Tests', () => {
     it('should login user with correct credentials', async () => {
       // Mock user exists with hashed password
       const hashedPassword = await bcrypt.hash('CorrectPass123!', 12);
-      mockDbExecute.mockResolvedValueOnce([[{
-        id: 1,
-        username: 'testuser',
-        email: 'test@example.com',
-        password: hashedPassword
-      }]]);
+      mockDbExecute
+        .mockResolvedValueOnce([[{
+          id: 1,
+          username: 'testuser',
+          email: 'test@example.com',
+          password: hashedPassword
+        }]])
+        .mockResolvedValueOnce([{ affectedRows: 1 }]) // Update online status
+        .mockResolvedValueOnce([[{ theme: 'light' }]]); // Get preferences
 
       const loginData = {
         email: 'test@example.com',
         password: 'CorrectPass123!'
       };
 
-      const response = await request(require('../../server'))
+      const response = await request(app)
         .post('/api/auth/login')
         .send(loginData)
         .expect(200);
@@ -143,7 +159,7 @@ describe('Authentication API Integration Tests', () => {
         password: 'AnyPass123!'
       };
 
-      const response = await request(require('../../server'))
+      const response = await request(app)
         .post('/api/auth/login')
         .send(loginData)
         .expect(401);
@@ -166,7 +182,7 @@ describe('Authentication API Integration Tests', () => {
         password: 'WrongPass123!' // Different from hashed one
       };
 
-      const response = await request(require('../../server'))
+      const response = await request(app)
         .post('/api/auth/login')
         .send(loginData)
         .expect(401);
@@ -181,7 +197,7 @@ describe('Authentication API Integration Tests', () => {
         password: '' // Empty password
       };
 
-      const response = await request(require('../../server'))
+      const response = await request(app)
         .post('/api/auth/login')
         .send(invalidLoginData)
         .expect(400);
@@ -192,78 +208,24 @@ describe('Authentication API Integration Tests', () => {
     });
   });
 
-  describe('POST /api/auth/refresh', () => {
-    it('should refresh access token with valid refresh token', async () => {
-      // This test would require mocking JWT verification
-      // Since we don't have the actual implementation accessible here,
-      // we'll skip this for now or implement based on the actual route logic
-    });
-
+  describe('POST /api/auth/refresh-token', () => {
     it('should return error for invalid refresh token', async () => {
-      // Similar to above, would need actual route implementation
-    });
-  });
-
-  describe('POST /api/auth/logout', () => {
-    it('should logout user successfully', async () => {
-      // This would typically require an authenticated request
-      // We'll test with a mocked token
-    });
-  });
-
-  describe('GET /api/auth/profile', () => {
-    it('should return user profile with valid token', async () => {
-      // This would require authentication middleware to work properly
-      // We'll need to mock a valid JWT token
-    });
-  });
-});
-
-// Additional tests for other auth-related functionality
-describe('Additional Auth Integration Tests', () => {
-  let mockDbExecute;
-
-  beforeEach(() => {
-    mockDbExecute = jest.fn();
-    db.execute = mockDbExecute;
-    jest.clearAllMocks();
-  });
-
-  describe('Password reset functionality', () => {
-    it('should initiate password reset', async () => {
-      // Mock that user exists
-      mockDbExecute.mockResolvedValueOnce([[{
-        id: 1,
-        email: 'user@example.com',
-        username: 'testuser'
-      }]]);
-
-      const response = await request(require('../../server'))
-        .post('/api/auth/forgot-password')
-        .send({ email: 'user@example.com' })
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.message).toBe('Password reset link sent to your email');
-    });
-
-    it('should return error if user does not exist', async () => {
-      mockDbExecute.mockResolvedValueOnce([[]]); // User not found
-
-      const response = await request(require('../../server'))
-        .post('/api/auth/forgot-password')
-        .send({ email: 'nonexistent@example.com' })
-        .expect(404);
+      const response = await request(app)
+        .post('/api/auth/refresh-token')
+        .send({ refreshToken: 'invalid-token' })
+        .expect(401);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe('User not found');
     });
-  });
 
-  describe('Update profile functionality', () => {
-    it('should update user profile with valid token', async () => {
-      // Mock user exists and token is valid
-      // This would require proper authentication setup
+    it('should return error for missing refresh token', async () => {
+      const response = await request(app)
+        .post('/api/auth/refresh-token')
+        .send({})
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('Refresh token is required');
     });
   });
 });

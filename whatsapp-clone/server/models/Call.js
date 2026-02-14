@@ -66,6 +66,33 @@ class Call {
   }
 
   /**
+   * 获取用户的通话历史 (alias for getCallHistory)
+   */
+  static async getHistory(userId, { limit = 50, offset = 0, type } = {}) {
+    let query = `
+      SELECT c.*, 
+             caller.username as caller_username, caller.avatar as caller_avatar,
+             receiver.username as receiver_username, receiver.avatar as receiver_avatar
+      FROM calls c
+      LEFT JOIN users caller ON c.caller_id = caller.id
+      LEFT JOIN users receiver ON c.receiver_id = receiver.id
+      WHERE c.caller_id = ? OR c.receiver_id = ?
+    `;
+    const params = [userId, userId];
+    
+    if (type) {
+      query += ' AND c.call_type = ?';
+      params.push(type);
+    }
+    
+    query += ' ORDER BY c.started_at DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+    
+    const [rows] = await db.execute(query, params);
+    return rows;
+  }
+
+  /**
    * 获取用户的通话历史
    */
   static async getCallHistory(userId, limit = 50) {
@@ -80,6 +107,25 @@ class Call {
        ORDER BY c.started_at DESC
        LIMIT ?`,
       [userId, userId, limit]
+    );
+    return rows;
+  }
+
+  /**
+   * 获取与特定联系人的通话
+   */
+  static async getWithContact(userId, contactId, { limit = 10 } = {}) {
+    const [rows] = await db.execute(
+      `SELECT c.*, 
+              caller.username as caller_username, caller.avatar as caller_avatar,
+              receiver.username as receiver_username, receiver.avatar as receiver_avatar
+       FROM calls c
+       LEFT JOIN users caller ON c.caller_id = caller.id
+       LEFT JOIN users receiver ON c.receiver_id = receiver.id
+       WHERE (c.caller_id = ? AND c.receiver_id = ?) OR (c.caller_id = ? AND c.receiver_id = ?)
+       ORDER BY c.started_at DESC
+       LIMIT ?`,
+      [userId, contactId, contactId, userId, limit]
     );
     return rows;
   }
@@ -115,6 +161,36 @@ class Call {
   }
 
   /**
+   * 获取未接来电数量
+   */
+  static async getMissedCount(userId) {
+    const [rows] = await db.execute(
+      'SELECT COUNT(*) as count FROM calls WHERE receiver_id = ? AND status IN ("missed", "declined")',
+      [userId]
+    );
+    return rows[0].count;
+  }
+
+  /**
+   * 获取通话统计 (alias for getCallStats)
+   */
+  static async getStats(userId, { days = 30 } = {}) {
+    const [rows] = await db.execute(
+      `SELECT 
+         call_type,
+         status,
+         COUNT(*) as count,
+         SUM(duration) as total_duration
+       FROM calls 
+       WHERE (caller_id = ? OR receiver_id = ?)
+         AND started_at >= DATE_SUB(NOW(), INTERVAL ? DAY)
+       GROUP BY call_type, status`,
+      [userId, userId, days]
+    );
+    return rows;
+  }
+
+  /**
    * 获取通话统计
    */
   static async getCallStats(userId) {
@@ -131,6 +207,43 @@ class Call {
       [userId, userId, userId, userId]
     );
     return rows[0];
+  }
+
+  /**
+   * 获取进行中的通话
+   */
+  static async getOngoing(userId) {
+    const [rows] = await db.execute(
+      `SELECT * FROM calls 
+       WHERE (caller_id = ? OR receiver_id = ?) 
+         AND status IN ('ringing', 'answered')
+       ORDER BY started_at DESC
+       LIMIT 1`,
+      [userId, userId]
+    );
+    return rows[0];
+  }
+
+  /**
+   * 删除通话记录
+   */
+  static async delete(callId, userId) {
+    const [result] = await db.execute(
+      'DELETE FROM calls WHERE id = ? AND (caller_id = ? OR receiver_id = ?)',
+      [callId, userId, userId]
+    );
+    return result.affectedRows > 0;
+  }
+
+  /**
+   * 清空通话历史
+   */
+  static async clearHistory(userId) {
+    const [result] = await db.execute(
+      'DELETE FROM calls WHERE caller_id = ? OR receiver_id = ?',
+      [userId, userId]
+    );
+    return result.affectedRows;
   }
 }
 

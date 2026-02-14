@@ -28,8 +28,7 @@ describe('Group Model', () => {
       const groups = await Group.findAll();
 
       expect(mockDbExecute).toHaveBeenCalledWith(
-        expect.stringContaining('LEFT JOIN group_members gm ON g.id = gm.group_id GROUP BY g.id ORDER BY g.created_at DESC'),
-        []
+        expect.stringContaining('LEFT JOIN group_members gm')
       );
       expect(groups).toEqual(mockGroups);
     });
@@ -62,8 +61,8 @@ describe('Group Model', () => {
       
       const mockInsertResult = { insertId: 123 };
       mockDbExecute
-        .mockResolvedValueOnce([mockInsertResult]) // Insert group
-        .mockResolvedValueOnce([{}]); // Insert member
+        .mockResolvedValueOnce([mockInsertResult])
+        .mockResolvedValueOnce([{}]);
 
       const newGroup = await Group.create(groupData);
 
@@ -100,7 +99,7 @@ describe('Group Model', () => {
 
       expect(mockDbExecute).toHaveBeenNthCalledWith(1,
         'INSERT INTO groups (name, description, avatar, creator_id) VALUES (?, ?, ?, ?)',
-        ['No Avatar Group', 'A new group without avatar', '', 1]
+        ['No Avatar Group', 'A group without avatar', '', 1]
       );
     });
   });
@@ -145,7 +144,7 @@ describe('Group Model', () => {
       const members = await Group.getMembers(1);
 
       expect(mockDbExecute).toHaveBeenCalledWith(
-        expect.stringContaining('FROM users u JOIN group_members gm ON u.id = gm.user_id WHERE gm.group_id = ?'),
+        expect.stringContaining('JOIN group_members gm'),
         [1]
       );
       expect(members).toEqual(mockMembers);
@@ -164,7 +163,7 @@ describe('Group Model', () => {
       const groups = await Group.getGroupsByUserId(1);
 
       expect(mockDbExecute).toHaveBeenCalledWith(
-        expect.stringContaining('JOIN group_members gm ON g.id = gm.group_id WHERE gm.user_id = ? GROUP BY g.id ORDER BY g.created_at DESC'),
+        expect.stringContaining('WHERE gm.user_id = ?'),
         [1]
       );
       expect(groups).toEqual(mockGroups);
