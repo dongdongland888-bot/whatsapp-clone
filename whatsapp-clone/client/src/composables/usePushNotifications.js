@@ -206,6 +206,11 @@ export function usePushNotifications() {
     })
   }
 
+  // Send notification directly (wrapper for showNotification)
+  const sendNotification = async (title, options = {}) => {
+    return showNotification(title, options)
+  }
+
   // Check current subscription status
   const checkSubscription = async () => {
     if (!checkSupport()) return
@@ -241,6 +246,7 @@ export function usePushNotifications() {
     subscribe,
     unsubscribe,
     showNotification,
+    sendNotification,
     checkSubscription
   }
 }
