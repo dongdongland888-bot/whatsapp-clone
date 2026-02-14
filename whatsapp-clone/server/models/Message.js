@@ -241,6 +241,50 @@ class Message {
     return rows;
   }
 
+  // Advanced search with filters
+  static async searchAdvanced(userId, query, { limit = 20, offset = 0, type = null, chatId = null } = {}) {
+    const searchQuery = `%${query}%`;
+    const params = [userId, userId];
+    
+    let sql = `
+      SELECT 
+        m.id, m.sender_id, m.receiver_id, m.group_id, m.content,
+        m.message_type, m.created_at, m.media_id,
+        u.username as sender_name, u.avatar as sender_avatar,
+        media.file_path as media_url, media.thumbnail_path as media_thumbnail,
+        media.file_type as media_type, media.original_name as media_name
+      FROM messages m
+      JOIN users u ON m.sender_id = u.id
+      LEFT JOIN media ON m.media_id = media.id
+      WHERE (m.sender_id = ? OR m.receiver_id = ?)
+        AND m.is_deleted = FALSE
+    `;
+    
+    // Add content search for text messages
+    if (type === 'text' || !type) {
+      sql += ' AND (m.content LIKE ? OR (m.message_type != \'text\' AND ? IS NOT NULL))';
+      params.push(searchQuery, type);
+    }
+    
+    // Filter by message type
+    if (type && type !== 'all') {
+      sql += ' AND m.message_type = ?';
+      params.push(type);
+    }
+    
+    // Filter by specific chat
+    if (chatId) {
+      sql += ' AND (m.receiver_id = ? OR m.sender_id = ?)';
+      params.push(chatId, chatId);
+    }
+    
+    sql += ' ORDER BY m.created_at DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+    
+    const [rows] = await db.execute(sql, params);
+    return rows;
+  }
+
   // Get recent conversations for a user
   static async getRecentConversations(userId, limit = 20) {
     const [rows] = await db.execute(`

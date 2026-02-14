@@ -41,7 +41,7 @@ router.get('/unread', asyncHandler(async (req, res) => {
 
 // Search messages
 router.get('/search', asyncHandler(async (req, res) => {
-  const { query, limit = 20, offset = 0 } = req.query;
+  const { query, limit = 20, offset = 0, type, chatId } = req.query;
   
   if (!query || query.length < 2) {
     return res.status(400).json({
@@ -50,14 +50,22 @@ router.get('/search', asyncHandler(async (req, res) => {
     });
   }
   
-  const messages = await Message.search(req.user.id, query, {
+  const messages = await Message.searchAdvanced(req.user.id, query, {
     limit: parseInt(limit),
-    offset: parseInt(offset)
+    offset: parseInt(offset),
+    type: type || null,
+    chatId: chatId ? parseInt(chatId) : null
   });
   
   res.json({
     success: true,
-    data: messages
+    data: messages,
+    meta: {
+      query,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      count: messages.length
+    }
   });
 }));
 
