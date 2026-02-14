@@ -26,7 +26,7 @@
         <div 
           v-if="localStream && isVideoEnabled" 
           class="local-video-wrapper"
-          :class="{ 'dragging': isDragging }"
+          :class="{ 'dragging': isDragging, 'screen-sharing': isScreenSharing }"
           @mousedown="startDrag"
           @touchstart="startDrag"
         >
@@ -37,7 +37,7 @@
             playsinline
             muted
           ></video>
-          <div class="pip-label">You</div>
+          <div class="pip-label">{{ isScreenSharing ? 'Screen' : 'You' }}</div>
         </div>
       </Transition>
 
@@ -95,9 +95,21 @@
             <span>{{ isVideoEnabled ? 'Camera' : 'Camera' }}</span>
           </button>
 
+          <!-- 屏幕共享 -->
+          <button 
+            v-if="callType === 'video' && screenShareSupported"
+            class="control-btn"
+            :class="{ 'active': isScreenSharing }"
+            @click="toggleScreenShare"
+            :title="isScreenSharing ? 'Stop sharing' : 'Share screen'"
+          >
+            <i :class="isScreenSharing ? 'icon-screen-share-off' : 'icon-screen-share'"></i>
+            <span>{{ isScreenSharing ? 'Stop' : 'Share' }}</span>
+          </button>
+
           <!-- 切换摄像头 -->
           <button 
-            v-if="callType === 'video' && isVideoEnabled"
+            v-if="callType === 'video' && isVideoEnabled && !isScreenSharing"
             class="control-btn"
             @click="switchCamera"
             title="Switch camera"
@@ -125,13 +137,46 @@
       </div>
 
       <!-- 连接质量指示器 -->
-      <div v-if="status === 'connected'" class="connection-quality">
-        <div class="quality-bars" :class="connectionQuality">
+      <div v-if="status === 'connected'" class="connection-quality" @click="showQualityDetails = !showQualityDetails">
+        <div class="quality-bars" :class="networkQuality.level">
+          <span></span>
           <span></span>
           <span></span>
           <span></span>
         </div>
+        <span class="quality-label">{{ networkQuality.level }}</span>
+        
+        <!-- 详细质量信息弹窗 -->
+        <Transition name="fade">
+          <div v-if="showQualityDetails" class="quality-details">
+            <div class="quality-item">
+              <span class="label">Latency</span>
+              <span class="value">{{ Math.round(networkQuality.rtt || 0) }} ms</span>
+            </div>
+            <div class="quality-item">
+              <span class="label">Packet Loss</span>
+              <span class="value">{{ (networkQuality.packetLossRate || 0).toFixed(1) }}%</span>
+            </div>
+            <div class="quality-item">
+              <span class="label">Jitter</span>
+              <span class="value">{{ Math.round(networkQuality.jitter || 0) }} ms</span>
+            </div>
+            <div class="quality-item">
+              <span class="label">Quality Score</span>
+              <span class="value">{{ networkQuality.score || 0 }}/100</span>
+            </div>
+          </div>
+        </Transition>
       </div>
+
+      <!-- 屏幕共享提示 -->
+      <Transition name="fade">
+        <div v-if="isScreenSharing" class="screen-share-indicator">
+          <i class="icon-screen-share"></i>
+          <span>You are sharing your screen</span>
+          <button @click="toggleScreenShare" class="stop-share-btn">Stop sharing</button>
+        </div>
+      </Transition>
     </div>
   </Transition>
 </template>
@@ -139,6 +184,7 @@
 <script>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useStore } from 'vuex';
+import WebRTCService from '@/services/webrtc';
 
 export default {
   name: 'VideoCall',
@@ -153,6 +199,15 @@ export default {
     const isDragging = ref(false);
     const dragOffset = ref({ x: 0, y: 0 });
     
+    // Screen sharing state
+    const isScreenSharing = ref(false);
+    const screenShareSupported = ref(WebRTCService.isScreenShareSupported());
+    
+    // Network quality state
+    const networkQuality = ref({ score: 100, level: 'excellent', rtt: 0, packetLossRate: 0, jitter: 0 });
+    const showQualityDetails = ref(false);
+    const statsInterval = ref(null);
+    
     // Computed properties from store
     const status = computed(() => store.state.call.status);
     const callType = computed(() => store.state.call.callType);
@@ -166,14 +221,7 @@ export default {
     const callStatusText = computed(() => store.getters['call/callStatusText']);
     const isInCall = computed(() => store.getters['call/isInCall']);
     const isRinging = computed(() => store.getters['call/isRinging']);
-    
-    // Connection quality (mock for now)
-    const connectionQuality = computed(() => {
-      const iceState = store.state.call.iceConnectionState;
-      if (iceState === 'connected' || iceState === 'completed') return 'good';
-      if (iceState === 'checking') return 'medium';
-      return 'poor';
-    });
+    const webrtcService = computed(() => store.state.call.webrtcService);
     
     // Watch for stream changes and attach to video elements
     watch(localStream, (stream) => {
@@ -187,6 +235,43 @@ export default {
         remoteVideo.value.srcObject = stream;
       }
     }, { immediate: true });
+    
+    // Watch for connected state to start quality monitoring
+    watch(status, (newStatus) => {
+      if (newStatus === 'connected') {
+        startQualityMonitoring();
+      } else {
+        stopQualityMonitoring();
+      }
+    });
+    
+    // Start quality monitoring
+    const startQualityMonitoring = () => {
+      if (statsInterval.value) {
+        clearInterval(statsInterval.value);
+      }
+      
+      statsInterval.value = setInterval(async () => {
+        if (webrtcService.value) {
+          try {
+            const stats = await webrtcService.value.getDetailedStats();
+            if (stats) {
+              networkQuality.value = webrtcService.value.calculateNetworkQuality(stats);
+            }
+          } catch (error) {
+            console.error('Error getting stats:', error);
+          }
+        }
+      }, 2000); // Update every 2 seconds
+    };
+    
+    // Stop quality monitoring
+    const stopQualityMonitoring = () => {
+      if (statsInterval.value) {
+        clearInterval(statsInterval.value);
+        statsInterval.value = null;
+      }
+    };
     
     // Control functions
     const toggleAudio = () => {
@@ -208,6 +293,41 @@ export default {
     const endCall = () => {
       store.dispatch('call/endCall');
     };
+    
+    // Screen sharing functions
+    const toggleScreenShare = async () => {
+      if (!webrtcService.value) return;
+      
+      try {
+        if (isScreenSharing.value) {
+          await webrtcService.value.stopScreenShare();
+          isScreenSharing.value = false;
+        } else {
+          await webrtcService.value.startScreenShare();
+          isScreenSharing.value = true;
+        }
+      } catch (error) {
+        console.error('Screen share error:', error);
+        // Show error to user (could emit an event or use a toast)
+      }
+    };
+    
+    // Setup screen share callbacks
+    watch(webrtcService, (service) => {
+      if (service) {
+        service.onScreenShareEnded = () => {
+          isScreenSharing.value = false;
+        };
+        
+        service.onScreenShareStarted = () => {
+          isScreenSharing.value = true;
+        };
+        
+        service.onScreenShareStopped = () => {
+          isScreenSharing.value = false;
+        };
+      }
+    }, { immediate: true });
     
     // PiP drag functionality
     const startDrag = (e) => {
@@ -250,6 +370,7 @@ export default {
     // Cleanup on unmount
     onUnmounted(() => {
       stopDrag();
+      stopQualityMonitoring();
     });
     
     return {
@@ -268,12 +389,16 @@ export default {
       callStatusText,
       isInCall,
       isRinging,
-      connectionQuality,
+      isScreenSharing,
+      screenShareSupported,
+      networkQuality,
+      showQualityDetails,
       toggleAudio,
       toggleVideo,
       switchCamera,
       toggleSpeaker,
       endCall,
+      toggleScreenShare,
       startDrag
     };
   }
@@ -366,6 +491,15 @@ export default {
   
   &.dragging {
     opacity: 0.8;
+  }
+  
+  &.screen-sharing {
+    width: 160px;
+    height: 100px;
+    
+    .local-video {
+      transform: none; // No mirror effect for screen share
+    }
   }
   
   .local-video {
@@ -529,6 +663,7 @@ export default {
     height: 56px;
     cursor: pointer;
     transition: all 0.2s;
+    position: relative;
     
     i {
       font-size: 24px;
@@ -591,6 +726,13 @@ export default {
   top: 20px;
   right: 160px;
   z-index: 10;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
   
   .quality-bars {
     display: flex;
@@ -601,17 +743,27 @@ export default {
       width: 4px;
       background: rgba(255, 255, 255, 0.3);
       border-radius: 2px;
+      transition: background-color 0.3s;
       
-      &:nth-child(1) { height: 8px; }
-      &:nth-child(2) { height: 12px; }
-      &:nth-child(3) { height: 16px; }
+      &:nth-child(1) { height: 6px; }
+      &:nth-child(2) { height: 10px; }
+      &:nth-child(3) { height: 14px; }
+      &:nth-child(4) { height: 18px; }
     }
     
-    &.good span {
+    &.excellent span {
       background: #4caf50;
     }
     
-    &.medium {
+    &.good {
+      span:nth-child(1),
+      span:nth-child(2),
+      span:nth-child(3) {
+        background: #8bc34a;
+      }
+    }
+    
+    &.fair {
       span:nth-child(1),
       span:nth-child(2) {
         background: #ffc107;
@@ -622,6 +774,81 @@ export default {
       span:nth-child(1) {
         background: #f44336;
       }
+    }
+  }
+  
+  .quality-label {
+    color: #fff;
+    font-size: 12px;
+    text-transform: capitalize;
+  }
+  
+  .quality-details {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 12px;
+    padding: 12px 16px;
+    min-width: 180px;
+    
+    .quality-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+      }
+      
+      .value {
+        color: #fff;
+        font-size: 12px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Screen share indicator
+.screen-share-indicator {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(76, 175, 80, 0.9);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 15;
+  font-size: 14px;
+  
+  i {
+    font-size: 16px;
+  }
+  
+  .stop-share-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 8px;
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
   }
 }
@@ -658,6 +885,16 @@ export default {
   opacity: 0;
 }
 
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
 // Icons (using emoji as fallback)
 .icon-lock::before { content: "🔒"; }
 .icon-mic::before { content: "🎤"; }
@@ -668,4 +905,6 @@ export default {
 .icon-speaker::before { content: "🔊"; }
 .icon-speaker-off::before { content: "🔈"; }
 .icon-phone-end::before { content: "📞"; }
+.icon-screen-share::before { content: "🖥️"; }
+.icon-screen-share-off::before { content: "🚫"; }
 </style>
