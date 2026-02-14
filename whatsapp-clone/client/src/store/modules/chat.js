@@ -330,11 +330,15 @@ const actions = {
     });
   },
   
-  async deleteMessage({ state, commit }, messageId) {
+  async deleteMessage({ state, commit }, payload) {
     if (!state.socket) return Promise.reject(new Error('Socket not connected'));
     
+    // Support both simple messageId and { messageId, forEveryone } format
+    const messageId = typeof payload === 'object' ? payload.messageId : payload;
+    const forEveryone = typeof payload === 'object' ? payload.forEveryone : false;
+    
     return new Promise((resolve, reject) => {
-      state.socket.emit('delete-message', { messageId }, (response) => {
+      state.socket.emit('delete-message', { messageId, forEveryone }, (response) => {
         if (response?.error) {
           reject(new Error(response.error));
         } else {

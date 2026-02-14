@@ -252,6 +252,22 @@
         </div>
       </div>
     </transition>
+
+    <!-- Forward Message Modal -->
+    <ForwardMessageModal
+      :show="showForwardModal"
+      :messages="messagesToForward"
+      @close="closeForwardModal"
+      @forwarded="handleForwarded"
+    />
+
+    <!-- Delete Message Modal (Enhanced) -->
+    <DeleteMessageModal
+      :show="showDeleteModal"
+      :messages="messagesToDelete"
+      @close="closeDeleteModal"
+      @delete="handleDeleteConfirm"
+    />
   </div>
 </template>
 
@@ -263,6 +279,9 @@ import MessageBubble from '../components/chat/MessageBubble.vue';
 import EmojiPicker from '../components/chat/EmojiPicker.vue';
 import VoiceRecorder from '../components/chat/VoiceRecorder.vue';
 import MediaUploader from '../components/chat/MediaUploader.vue';
+import MessageSearch from '../components/chat/MessageSearch.vue';
+import ForwardMessageModal from '../components/chat/ForwardMessageModal.vue';
+import DeleteMessageModal from '../components/chat/DeleteMessageModal.vue';
 
 export default {
   name: 'Chat',
@@ -270,7 +289,10 @@ export default {
     MessageBubble,
     EmojiPicker,
     VoiceRecorder,
-    MediaUploader
+    MediaUploader,
+    MessageSearch,
+    ForwardMessageModal,
+    DeleteMessageModal
   },
   setup() {
     const store = useStore();
@@ -601,9 +623,50 @@ export default {
     };
     
     // Forward handling
+    const showForwardModal = ref(false);
+    const messagesToForward = ref([]);
+    
     const handleForward = (message) => {
-      // TODO: Open forward modal
-      console.log('Forward message:', message);
+      messagesToForward.value = [message];
+      showForwardModal.value = true;
+    };
+    
+    const closeForwardModal = () => {
+      showForwardModal.value = false;
+      messagesToForward.value = [];
+    };
+    
+    const handleForwarded = ({ messages, contacts, groups }) => {
+      console.log('Messages forwarded:', messages.length, 'to', contacts.length + groups.length, 'recipients');
+      // Could show success toast here
+    };
+    
+    // Enhanced delete handling
+    const showDeleteModal = ref(false);
+    const messagesToDelete = ref([]);
+    
+    const handleDeleteEnhanced = (message) => {
+      messagesToDelete.value = [message];
+      showDeleteModal.value = true;
+    };
+    
+    const closeDeleteModal = () => {
+      showDeleteModal.value = false;
+      messagesToDelete.value = [];
+    };
+    
+    const handleDeleteConfirm = async ({ messages, forEveryone }) => {
+      try {
+        for (const msg of messages) {
+          await store.dispatch('chat/deleteMessage', { 
+            messageId: msg.id, 
+            forEveryone 
+          });
+        }
+        closeDeleteModal();
+      } catch (error) {
+        console.error('Delete error:', error);
+      }
     };
     
     // Selection handling
@@ -805,6 +868,12 @@ export default {
       hasMoreMessages,
       typingUsers,
       
+      // Forward/Delete modal state
+      showForwardModal,
+      messagesToForward,
+      showDeleteModal,
+      messagesToDelete,
+      
       // Computed
       activeChat,
       messages,
@@ -837,6 +906,11 @@ export default {
       cancelDelete,
       confirmDelete,
       handleForward,
+      closeForwardModal,
+      handleForwarded,
+      handleDeleteEnhanced,
+      closeDeleteModal,
+      handleDeleteConfirm,
       toggleMessageSelection,
       handleSendMedia,
       handleUploadError,
